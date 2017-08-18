@@ -1,3 +1,11 @@
+## NBA HACKATHON ##
+#TODO:
+#-lazy elim (random if tied)
+#-adapt to csv output
+#-proper tie breaker
+
+
+
 
 
 import xlrd
