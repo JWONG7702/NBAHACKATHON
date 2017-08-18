@@ -6,10 +6,15 @@ class team:
         self.name = name
         self.div = div
         self.conf = conf
-        self.record = (0,0,0)
+        self.record = [0,0,0]
     def __str__(self):
         return self.name + ", " + self.div + ", " + self.conf + "," + str(self.record)
-        
+    def win(self):
+        self.record[0] +=1
+    def lose(self):
+        self.record[1] +=1
+    def tie(self):
+        self.record[2] +=1
 class div:
     """represents NBA division"""
     def __init__(self,name,conf,team):
@@ -67,8 +72,14 @@ def get_teams(path):
             curr_div = div(row[1], row[2],curr_team)
             curr_conf.divs.update({row[1]:curr_div})
 def update_scores(row):
-    if ( row[4] = row[5]):
-        print (row)
+    if ( row[3] == row[4]):
+        print ("ERROR: WOW THERE'S A TIE GAME")
+    elif (row[3] > row[4]):
+        dict_teams[row[1]].win()
+        dict_teams[row[2]].lose()
+    else:
+        dict_teams[row[2]].win()
+        dict_teams[row[1]].lose()
 def status():
     for my_conf in dict_conf.values():
         print (my_conf.name)
