@@ -17,6 +17,8 @@ class team:
         self.record[1] +=1
     def tie(self):
         self.record[2] +=1
+        
+    ### needed for making sort work ###
     def __lt__(self, other):
         return (float(self.record[0])/float(self.record[1]) < float(other.record[0])/float(other.record[1]))
     def __eq__(self,other):
@@ -42,6 +44,9 @@ dict_conf = { "East": conf("East"), "West": conf("West")}
 dict_teams = {}
 #----------------------------------------------------------------------
 def check_elim (day):
+    """
+    checks at the beinning of a day if a team was eliminated the day before
+    """
     #TODO what if a team is undefeated?
     list_teams = sorted(list(dict_teams.values()))
     ############ print standings ########################
@@ -64,7 +69,7 @@ def get_scores(path):
         row = div_data.row_values(i+1)
         if (day != row[0] and i > 100):
             day = row[0]
-            check_elim(day)
+            check_elim(day - 1.0)
         update_scores(row)
         
 def get_teams(path):
@@ -89,6 +94,9 @@ def get_teams(path):
             curr_div = div(row[1], row[2],curr_team)
             curr_conf.divs.update({row[1]:curr_div})
 def update_scores(row):
+    """
+    updates the score per game
+    """
     if ( row[3] == row[4]):
         print ("ERROR: WOW THERE'S A TIE GAME")
     elif (row[3] > row[4]):
