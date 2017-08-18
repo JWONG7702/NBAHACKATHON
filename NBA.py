@@ -1,4 +1,5 @@
 
+
 import xlrd
 class team:
     """represents NBA team"""
@@ -7,6 +8,7 @@ class team:
         self.div = div
         self.conf = conf
         self.record = [0,0,0]
+        self.date_elim = 0
     def __str__(self):
         return self.name + ", " + self.div + ", " + self.conf + "," + str(self.record)
     def win(self):
@@ -15,6 +17,10 @@ class team:
         self.record[1] +=1
     def tie(self):
         self.record[2] +=1
+    def __lt__(self, other):
+        return (float(self.record[0])/float(self.record[1]) < float(other.record[0])/float(other.record[1]))
+    def __eq__(self,other):
+        return (float(self.record[0])/float(self.record[1]) == float(other.record[0])/float(other.record[1]))
 class div:
     """represents NBA division"""
     def __init__(self,name,conf,team):
@@ -35,6 +41,17 @@ class conf:
 dict_conf = { "East": conf("East"), "West": conf("West")}
 dict_teams = {}
 #----------------------------------------------------------------------
+def check_elim (day):
+    #TODO what if a team is undefeated?
+    list_teams = sorted(list(dict_teams.values()))
+    ############ print standings ########################
+    #print("start")
+    #for i in list_teams:
+    #    print (i)
+    #print ("end")
+    print (day)
+    print (list_teams[-8])
+
 def get_scores(path):
     """
     Open and read an scores file
@@ -45,9 +62,9 @@ def get_scores(path):
     day = 0
     for i in range(1230):
         row = div_data.row_values(i+1)
-        if (day != row[0]):# if new day
+        if (day != row[0] and i > 100):
             day = row[0]
-            #check_elim()
+            check_elim(day)
         update_scores(row)
         
 def get_teams(path):
