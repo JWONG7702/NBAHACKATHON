@@ -68,7 +68,13 @@ def check_elim(division, date):
 	#Function to check if any teams have been eliminated because of games
 	min_wins=division.iloc[7]["Wins"]
 	for index, row in division.iterrows():
-		if row["Wins"]+row["Games Left"]<min_wins and row["Eliminated"]==0 and row["Playoffs"]==0:
+		if row["Wins"]+row["Games Left"]=min_wins and row["Eliminated"]==0 and row["Playoffs"]==0:
+			#hopefully this avoids a lot of the tiebreaking calculation...
+			if not tiebreaker(row["Team_Name"], division, min_wins, date):
+				row["Eliminated"]=1
+				row["Date"]=date
+				division.loc[index]=row
+		elif row["Wins"]+row["Games Left"]<min_wins and row["Eliminated"]==0 and row["Playoffs"]==0:
 			row["Eliminated"]=1
 			row["Date"]=date
 			division.loc[index]=row
@@ -83,6 +89,75 @@ def check_play(division, date):
 			row["Date"]=date
 			division.loc[index]=row
 	return division
+
+def tiebreaker(team, division, wins, date):
+	#Function to determine the outcome of tiebreakers
+	#Returns False if a team is eliminiated (does not assert anything about making playoffs)
+
+	#Find the number of teams in the tiebreak
+	num_ties, dummy=division.loc[division["Wins"]==wins, :].shape
+	if division.loc[division["Team_Name"]==team, "Games Left"] != 0:
+		num_ties+=1
+
+	if num_ties<2: 
+		return True
+
+	#Two Team Tie Breaker
+	elif num_ties==2:
+		other_team=division.loc[division["Wins"]==wins, "Team_Name"]
+
+		#Head to Head Record
+		team_wins=0
+		other_wins=0
+		games_left_between=0
+		for index, row in games.iterrows():
+			if row["Date"]<=date:
+				if row["Home Team"]==team and row["Away Team"]==other_team:
+					if row["Winner"]=="Home":
+						team_wins+=1
+					elif row["Winner"]=="Away":
+						other_wins+=1
+					else:
+						print("Uh Oh...")
+				elif row["Home Team"]==other_team and row["Away Team"]==team:
+					if row["Winner"]=="Home":
+						other_wins+=1
+					elif row["Winner"]=="Away":
+						team_wins+=1
+					else: 
+						print("Uh Oh...")
+				else:
+					pass
+			else:
+				if (row["Home Team"]==team and row["Away Team"]==other_team) or (row["Home Team"]==other_team and row["Away Team"]==team):
+					games_left_between+=1
+		if team_wins+games_left_between<other_wins:
+			return False
+		elif other_wins+games_left_between<team_wins:
+			return True
+		else:
+			#Division Leader... if a team can be division leader and other cannot return answer
+			team_lead=True
+			other_lead=True
+
+
+
+			if team_lead and not other_lead:
+				return True
+			elif other_lead and not team_lead:
+				return False
+			else:
+				#If teams are in same division, go by divison record
+
+
+
+		
+
+	#Multi-team Tiebreaker
+	else:
+
+
+
 
 for index, row in games.iterrows():
 	date=row["Date"]
@@ -112,12 +187,8 @@ for index, row in games.iterrows():
 	East_div=check_play(East_div, date)
 	West_div=check_play(West_div, date)
 
-writer=pd.ExcelWriter("Playoff_Results.xlsx", engine="xlsxwriter", date_format="mm/dd/yyyy", datetime_format="mm/dd/yyyy")
+#Writes the results to an excel file
+writer=pd.ExcelWriter("Playoff_Results_tie.xlsx", engine="xlsxwriter", date_format="mm/dd/yyyy", datetime_format="mm/dd/yyyy")
 East_div.to_excel(writer, sheet_name="East")
 West_div.to_excel(writer, sheet_name="West")
 writer.save()
-
-
-
-
-
