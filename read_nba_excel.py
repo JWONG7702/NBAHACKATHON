@@ -111,10 +111,11 @@ for index, row in games.iterrows():
 
 	East_div=check_play(East_div, date)
 	West_div=check_play(West_div, date)
-		
-East_div.to_excel("Playoff_Results.xlsx", sheet_name="East")
-West_div.to_excel("Playoff_Results.xlsx", sheet_name="West")
 
+writer=pd.ExcelWriter("Playoff_Results.xlsx", engine="xlsxwriter", date_format="mm/dd/yyyy", datetime_format="mm/dd/yyyy")
+East_div.to_excel(writer, sheet_name="East")
+West_div.to_excel(writer, sheet_name="West")
+writer.save()
 
 
 
