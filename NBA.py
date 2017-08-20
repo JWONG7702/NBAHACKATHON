@@ -15,7 +15,7 @@ class team:
         self.name = name
         self.div = div
         self.conf = conf
-        self.record = [0,0,0]
+        self.record = [0,0]
         self.date_elim = 0
     def __str__(self):
         return self.name + ", " + self.div + ", " + self.conf + "," + str(self.record)
@@ -23,8 +23,6 @@ class team:
         self.record[0] +=1
     def lose(self):
         self.record[1] +=1
-    def tie(self):
-        self.record[2] +=1
         
     ### needed for making sort work ###
     def __lt__(self, other):
