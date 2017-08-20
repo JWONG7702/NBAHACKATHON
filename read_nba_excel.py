@@ -178,9 +178,10 @@ def tiebreaker(team, division, wins, date):
 		other_team=temp_div.loc[temp_div["Wins"]==wins, "Team_Name"].values[0]
 
 		#Head to Head Record
-		if head_to_head(team, other_team, division, date)==0:
+		head2head = head_to_head(team,other_team, division, date)
+		if head2head==0:
 			return False
-		elif head_to_head(team, other_team, division, date)==1:
+		elif head2head==1:
 			return True
 		else: 
 			#Division Leader... if a team can be division leader and other cannot return answer
@@ -203,13 +204,13 @@ def tiebreaker(team, division, wins, date):
 				team_lead=False
 			elif division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] == team_div_max_wins:
 				div_leader=team_div.loc[0, "Team_Name"].values[0]
-				if head_to_head(team, div_leader, division, date)==0:
+				if head_to_head(team, div_leader, division, date)==0:###should actually recurse
 					team_lead=False
 			if division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0]<other_div_max_wins:
 				other_lead=False
 			elif division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0] == other_div_max_wins:
 				other_leader=other_div.iloc[0]["Team_Name"]
-				if head_to_head(team, other_leader, division, date)==0:
+				if head_to_head(team, other_leader, division, date)==0:###should actually recurse but only one layer deep and not if other_leader = other team
 					other_lead=False
 			if team_lead and not other_lead:
 				return True
@@ -224,7 +225,7 @@ def tiebreaker(team, division, wins, date):
 					record=win_loss(teams, date)
 
 				else:
-					pass
+					return True
 
 
 				
@@ -232,8 +233,7 @@ def tiebreaker(team, division, wins, date):
 	#Multi-team Tiebreaker
 	#needs code
 	else:
-		pass
-
+		return True ### really should just rewrite head2head to be multiteam (and division leader)
 		
 
 for index, row in games.iterrows():
