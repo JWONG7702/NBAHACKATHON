@@ -139,29 +139,7 @@ def head_to_head(team, other_team, division, date):
 	else:
 		return 2
 
-def win_loss(teams, date):
-	#Generates win loss record just within the inputted teams
-	team_names=teams.Team_Name.unique().tolist()
-	teams.loc[:,"Wins"]=0
-	teams.loc[:,"Losses"]=0
-	teams.loc[:, "Games Left"]=0
 
-	for index, rows in games.iterrows():
-		if row["Date"]<date:
-			if row["Home Team"] in team_names and row["Away Team"] in team_names:
-				if row["Winner"]=="Home":
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Losses"]+=1
-				elif row["Winner"]=="Away":
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Losses"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1
-		else:
-			if row["Home Team"] in team_names and row["Away Team"] in team_names:
-				teams.loc[teams["Team_Name"]==row["Home Team"], "Games Left"]+=1
-				teams.loc[teams["Team_Name"]==row["Away Team"], "Games Left"]+=1
-
-	teams.sort_values(by="Wins", ascending=False)
-	return teams
 
 def divisionlead(team, other_team, team_div_name, other_div_name, division, date, is_div):
 	#Function which returns 0 if team cannot win division tie breaker against other_team
@@ -205,6 +183,30 @@ def divisionlead(team, other_team, team_div_name, other_div_name, division, date
 		return 0
 
 
+def win_loss(teams, date):
+	#Generates win loss record just within the inputted teams
+	team_names=teams.Team_Name.unique().tolist()
+	teams.loc[:,"Wins"]=0
+	teams.loc[:,"Losses"]=0
+	teams.loc[:, "Games Left"]=0
+
+	for index, rows in games.iterrows():
+		if row["Date"]<date:
+			if row["Home Team"] in team_names and row["Away Team"] in team_names:
+				if row["Winner"]=="Home":
+					teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
+					teams.loc[teams["Team_Name"]==row["Away Team"], "Losses"]+=1
+				elif row["Winner"]=="Away":
+					teams.loc[teams["Team_Name"]==row["Home Team"], "Losses"]+=1
+					teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1
+		else:
+			if row["Home Team"] in team_names and row["Away Team"] in team_names:
+				teams.loc[teams["Team_Name"]==row["Home Team"], "Games Left"]+=1
+				teams.loc[teams["Team_Name"]==row["Away Team"], "Games Left"]+=1
+
+	teams.sort_values(by="Wins", ascending=False)
+	return teams
+    
 def tiebreaker(team, division, wins, date, is_div):
 	#Function to determine the outcome of tiebreakers
 	#Returns False if a team is eliminiated (does not assert anything about making playoffs)
@@ -241,13 +243,18 @@ def tiebreaker(team, division, wins, date, is_div):
 			            
 		#If teams are in same division, go by divison record
 		#needs code
-		if team_div_name==other_div_name:
-			teams=division.loc[division["Team_Name"]==team, :]
+		if team_div_name==other_div_name:          
+			for index, row in division.iterrows():
+				if (row["Division_id"]==team_div_name):  
+					print (row["Team_Name"])                    
+
+			teams=division.loc[division["Division_id"]==team_div_name, :]
 			teams.append(division.loc[division["Team_Name"]==other_team, :])
 			record=win_loss(teams, date)
+			print (record)           
             
 
-                print ("still tied: " + team + " and " + other_team)
+		print ("still tied: " + team + " and " + other_team)
 		return True
 
 
