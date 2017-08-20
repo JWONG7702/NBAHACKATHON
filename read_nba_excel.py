@@ -1,3 +1,4 @@
+
 import numpy as np 
 import pandas as pd 
 #Program for determining the playoff and elimination dates for teams
@@ -152,16 +153,22 @@ def divisionlead(team, other_team, team_div_name, other_div_name, division, date
 		team_lead=False
 	elif division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] == team_div_max_wins:
 		div_leader=team_div.loc[0, "Team_Name"].values[0]
-		#if not (tiebreaker(team,division,wins,date, 1)):
-		#	return 0
-		if head_to_head(team, div_leader, division, date)==0:###should actually recurse
-			team_lead=False
+		if (is_div ==0):
+			if not (tiebreaker(team,division,wins,date, 1)):
+				print ("divtie")
+				team_lead=False
+		#if head_to_head(team, div_leader, division, date)==0:###should actually recurse
+		#	team_lead=False
 	if division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0]<other_div_max_wins:
 		other_lead=False
 	elif division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0] == other_div_max_wins:
 		other_leader=other_div.iloc[0]["Team_Name"]
-		if head_to_head(team, other_leader, division, date)==0:###should actually recurse but only one layer deep and not if other_leader = other team
-			other_lead=False
+		#if head_to_head(team, other_leader, division, date)==0:###should actually recurse but only one layer deep and not if other_leader = other team
+		#	other_lead=False
+		if (is_div ==0):
+			if not (tiebreaker(other_team,division,wins,date, 1)):
+				print ("divtie")
+				other_lead=False
 	if team_lead and not other_lead:
 		return 1
 	elif other_lead and not team_lead:
@@ -208,10 +215,10 @@ def tiebreaker(team, division, wins, date, is_div):
 			teams=division.loc[division["Team_Name"]==team, :]
 			teams.append(division.loc[division["Team_Name"]==other_team, :])
 			record=win_loss(teams, date)
+            
 
-		else:
-			print ("still tied" + team + " " + other_team)
-			return True
+		print ("still tied" + team + " " + other_team)
+		return True
 
 
 				
