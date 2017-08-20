@@ -217,7 +217,7 @@ def tiebreaker(team, division, wins, date, is_div):
 			record=win_loss(teams, date)
             
 
-		print ("still tied " + team + " " + other_team)
+                print ("still tied: " + team + " and " + other_team)
 		return True
 
 
