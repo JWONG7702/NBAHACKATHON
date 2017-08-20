@@ -224,7 +224,7 @@ def tiebreaker(team, division, wins, date):
 					record=win_loss(teams, date)
 
 				else:
-					pass
+					return True
 
 
 				
@@ -232,7 +232,7 @@ def tiebreaker(team, division, wins, date):
 	#Multi-team Tiebreaker
 	#needs code
 	else:
-		pass
+		return True
 
 		
 
