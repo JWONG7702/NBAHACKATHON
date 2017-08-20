@@ -53,25 +53,14 @@ def add_loss(team):
 		West_div.loc[West_div['Team_Name']==team, "Games Left"]-=1
 	else:
 		print("Uh Oh...")
-"""
-def add_points(team, points):
-	#Adds points to get total points in a season
-	conf=divisions_table[divisions_table.Team_Name==team]
-	conf=conf.iloc[0]["Conference_id"]
-	if conf=="East":
-		East_div.loc[East_div['Team_Name']==team, "Total Points"]+=points
-	elif conf=="West":
-		West_div.loc[West_div['Team_Name']==team, "Total Points"]+=points
-	else:
-		print("Uh Oh...")
-"""
+
 def check_elim(division, date):
 	#Function to check if any teams have been eliminated because of games
 	min_wins=division.iloc[7]["Wins"]
 	for index, row in division.iterrows():
 		if row["Wins"]+row["Games Left"]==min_wins and row["Eliminated"]==0 and row["Playoffs"]==0:
 			#hopefully this avoids a lot of the tiebreaking calculation...
-			if not tiebreaker(row["Team_Name"], division, min_wins, date):
+			if not tiebreaker(row["Team_Name"], division, min_wins, date,0):
 				row["Eliminated"]=1
 				row["Date"]=date
 				division.loc[index]=row
@@ -80,23 +69,7 @@ def check_elim(division, date):
 			row["Date"]=date
 			division.loc[index]=row
 	return division
-"""
-def check_play(division, date):
-	#Function to check if any teams have secure a playoff spot
-	min_losses=division.iloc[7]["Losses"]
-	min_wins=division.iloc[7]["Wins"]
-	for index, row in division.iterrows():
-		if row["Losses"]+row["Games Left"]==min_losses and row["Eliminated"]==0 and row["Playoffs"]==0:
-			if tiebreaker(row["Team_Name"], division, min_wins, date):
-				row["Playoffs"]=1
-				row["Date"]=date
-				division.loc[index]=row
-		if row["Losses"]+row["Games Left"]<min_losses and row["Eliminated"]==0 and row["Playoffs"]==0:
-			row["Playoffs"]=1
-			row["Date"]=date
-			division.loc[index]=row
-	return division
-"""
+
 
 def head_to_head(team, other_team, division, date):
 	#Function which returns 0 if team cannot win head to head vs other_team
@@ -159,7 +132,43 @@ def win_loss(teams, date):
 	teams.sort_values(by="Wins", ascending=False)
 	return teams
 
-def tiebreaker(team, division, wins, date):
+def divisionlead(team, other_team, team_div_name, other_div_name, division, date, is_div):
+	#Function which returns 0 if team cannot win division tie breaker against other_team
+	#Returns 1 if the team will win the divTieBreaker
+	#Otherwise returns 2 for more tiebreaking
+	team_lead=True
+	other_lead=True
+
+	team_div=division.loc[division["Division_id"]==team_div_name, :]
+	other_div=division.loc[division["Division_id"]==other_div_name, :]
+
+	team_div=team_div.sort_values(by="Wins", ascending=False)
+	other_div=other_div.sort_values(by="Wins", ascending=False)
+
+	team_div_max_wins=team_div.iloc[0]["Wins"]
+	other_div_max_wins=other_div.iloc[0]["Wins"]
+
+	if division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] < team_div_max_wins:
+		team_lead=False
+	elif division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] == team_div_max_wins:
+		div_leader=team_div.loc[0, "Team_Name"].values[0]
+		#if not (tiebreaker(team,division,wins,date, 1)):
+		#	return 0
+		if head_to_head(team, div_leader, division, date)==0:###should actually recurse
+			team_lead=False
+	if division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0]<other_div_max_wins:
+		other_lead=False
+	elif division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0] == other_div_max_wins:
+		other_leader=other_div.iloc[0]["Team_Name"]
+		if head_to_head(team, other_leader, division, date)==0:###should actually recurse but only one layer deep and not if other_leader = other team
+			other_lead=False
+	if team_lead and not other_lead:
+		return 1
+	elif other_lead and not team_lead:
+		return 0
+
+
+def tiebreaker(team, division, wins, date, is_div):
 	#Function to determine the outcome of tiebreakers
 	#Returns False if a team is eliminiated (does not assert anything about making playoffs)
 
@@ -182,50 +191,27 @@ def tiebreaker(team, division, wins, date):
 		if head2head==0:
 			return False
 		elif head2head==1:
+			return True 
+		#Division Leader... if a team can be division leader and other cannot return answer
+		team_div_name=divisions_table.loc[divisions_table["Team_Name"]==team, "Division_id"].item()
+		other_div_name=divisions_table.loc[divisions_table["Team_Name"]==other_team, "Division_id"].item()
+
+		divlead=divisionlead(team, other_team, team_div_name, other_div_name, division, date, is_div)
+		if (divlead ==0):
+			return False
+		if (divlead ==1):
 			return True
-		else: 
-			#Division Leader... if a team can be division leader and other cannot return answer
-			team_lead=True
-			other_lead=True
-			
-			team_div_name=divisions_table.loc[divisions_table["Team_Name"]==team, "Division_id"].item()
-			other_div_name=divisions_table.loc[divisions_table["Team_Name"]==other_team, "Division_id"].item()
+			            
+		#If teams are in same division, go by divison record
+		#needs code
+		if team_div_name==other_div_name:
+			teams=division.loc[division["Team_Name"]==team, :]
+			teams.append(division.loc[division["Team_Name"]==other_team, :])
+			record=win_loss(teams, date)
 
-			team_div=division.loc[division["Division_id"]==team_div_name, :]
-			other_div=division.loc[division["Division_id"]==other_div_name, :]
-
-			team_div=team_div.sort_values(by="Wins", ascending=False)
-			other_div=other_div.sort_values(by="Wins", ascending=False)
-
-			team_div_max_wins=team_div.iloc[0]["Wins"]
-			other_div_max_wins=other_div.iloc[0]["Wins"]
-
-			if division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] < team_div_max_wins:
-				team_lead=False
-			elif division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] == team_div_max_wins:
-				div_leader=team_div.loc[0, "Team_Name"].values[0]
-				if head_to_head(team, div_leader, division, date)==0:###should actually recurse
-					team_lead=False
-			if division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0]<other_div_max_wins:
-				other_lead=False
-			elif division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0] == other_div_max_wins:
-				other_leader=other_div.iloc[0]["Team_Name"]
-				if head_to_head(team, other_leader, division, date)==0:###should actually recurse but only one layer deep and not if other_leader = other team
-					other_lead=False
-			if team_lead and not other_lead:
-				return True
-			elif other_lead and not team_lead:
-				return False
-			else:
-				#If teams are in same division, go by divison record
-				#needs code
-				if team_div_name==other_div_name:
-					teams=division.loc[division["Team_Name"]==team, :]
-					teams.append(division.loc[division["Team_Name"]==other_team, :])
-					record=win_loss(teams, date)
-
-				else:
-					return True
+		else:
+			print ("still tied" + team + " " + other_team)
+			return True
 
 
 				
@@ -235,7 +221,7 @@ def tiebreaker(team, division, wins, date):
 	else:
 		return True ### really should just rewrite head2head to be multiteam (and division leader)
 		
-
+        
 for index, row in games.iterrows():
 	date=row["Date"]
 	if row["Winner"]=="Home":
@@ -260,9 +246,6 @@ for index, row in games.iterrows():
 
 	East_div=check_elim(East_div, date)
 	West_div=check_elim(West_div, date)
-
-	#East_div=check_play(East_div, date)
-	#West_div=check_play(West_div, date)
 
 #Writes the results to an excel file
 writer=pd.ExcelWriter("Playoff_Results_tie.xlsx", engine="xlsxwriter", date_format="mm/dd/yyyy", datetime_format="mm/dd/yyyy")
