@@ -30,7 +30,7 @@ West_div.loc[:, "Date"]=""
 
 def add_win(team):
 	#function to add a win to winning team
-	conf=divisions_table[divisions_table.Team_Name==team]
+	conf=divisions_table.loc[divisions_table.Team_Name==team, :]
 	conf=conf.iloc[0]["Conference_id"]
 	if conf=="East":
 		East_div.loc[East_div['Team_Name']==team, "Wins"]+=1
@@ -43,7 +43,7 @@ def add_win(team):
 
 def add_loss(team):
 	#Function which adds a loss to a team
-	conf=divisions_table[divisions_table.Team_Name==team]
+	conf=divisions_table.loc[divisions_table.Team_Name==team, :]
 	conf=conf.iloc[0]["Conference_id"]
 	if conf=="East":
 		East_div.loc[East_div['Team_Name']==team, "Losses"]+=1
@@ -224,7 +224,7 @@ def tiebreaker(team, division, wins, date):
 					record=win_loss(teams, date)
 
 				else:
-					return True
+					pass
 
 
 				
@@ -232,7 +232,7 @@ def tiebreaker(team, division, wins, date):
 	#Multi-team Tiebreaker
 	#needs code
 	else:
-		return True
+		pass
 
 		
 
