@@ -3,6 +3,22 @@ import numpy as np
 import pandas as pd 
 #Program for determining the playoff and elimination dates for teams
 
+#Mechanism for examining/disabling warnings
+import traceback
+import warnings
+import sys
+
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+
+    log = file if hasattr(file,'write') else sys.stderr
+    traceback.print_stack(file=log)
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+warnings.showwarning = warn_with_traceback
+#for simplefilter, set to "always" to see all warnings, comment out to see first 
+#of each, ignore to see none
+warnings.simplefilter("ignore")
+
 #Reads File
 filename="Analytics_Attachment.xlsx"
 
@@ -246,8 +262,7 @@ def tiebreaker(team, division, wins, date, is_div):
 			teams.append(division.loc[division["Team_Name"]==other_team, :])
 			record=win_loss(teams, date)
             
-
-                print ("still tied: " + team + " and " + other_team)
+			print ("still tied: " + team + " and " + other_team)
 		return True
 
 
