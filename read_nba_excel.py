@@ -262,7 +262,7 @@ def tiebreaker(team, division, wins, date, is_div):
 			teams.append(division.loc[division["Team_Name"]==other_team, :])
 			record=win_loss(teams, date)
             
-			print ("still tied: " + team + " and " + other_team)
+		print ("still tied: " + team + " and " + other_team)
 		return True
 
 
