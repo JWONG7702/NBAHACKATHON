@@ -29,6 +29,36 @@ West_div.loc[:, "Playoffs"]=0
 West_div.loc[:, "Date"]=""
 #West_div.loc[:, "Total Points"]=0
 
+
+"""
+def check_play(division, date):
+	#Function to check if any teams have secure a playoff spot
+	min_losses=division.iloc[7]["Losses"]
+	min_wins=division.iloc[7]["Wins"]
+	for index, row in division.iterrows():
+		if row["Losses"]+row["Games Left"]==min_losses and row["Eliminated"]==0 and row["Playoffs"]==0:
+			if tiebreaker(row["Team_Name"], division, min_wins, date):
+				row["Playoffs"]=1
+				row["Date"]=date
+				division.loc[index]=row
+		if row["Losses"]+row["Games Left"]<min_losses and row["Eliminated"]==0 and row["Playoffs"]==0:
+			row["Playoffs"]=1
+			row["Date"]=date
+			division.loc[index]=row
+	return division
+def add_points(team, points):
+	#Adds points to get total points in a season
+	conf=divisions_table[divisions_table.Team_Name==team]
+	conf=conf.iloc[0]["Conference_id"]
+	if conf=="East":
+		East_div.loc[East_div['Team_Name']==team, "Total Points"]+=points
+	elif conf=="West":
+		West_div.loc[West_div['Team_Name']==team, "Total Points"]+=points
+	else:
+		print("Uh Oh...")
+"""
+
+
 def add_win(team):
 	#function to add a win to winning team
 	conf=divisions_table.loc[divisions_table.Team_Name==team, :]
