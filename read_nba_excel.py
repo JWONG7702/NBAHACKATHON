@@ -3,22 +3,6 @@ import numpy as np
 import pandas as pd 
 #Program for determining the playoff and elimination dates for teams
 
-#Mechanism for examining/disabling warnings
-import traceback
-import warnings
-import sys
-
-def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
-
-    log = file if hasattr(file,'write') else sys.stderr
-    traceback.print_stack(file=log)
-    log.write(warnings.formatwarning(message, category, filename, lineno, line))
-
-warnings.showwarning = warn_with_traceback
-#for simplefilter, set to "always" to see all warnings, comment out to see first 
-#of each, ignore to see none
-warnings.simplefilter("ignore")
-
 #Reads File
 filename="Analytics_Attachment.xlsx"
 
@@ -87,7 +71,6 @@ def add_win(team):
 		West_div.loc[West_div['Team_Name']==team, "Games Left"]-=1
 	else:
 		print("Uh Oh...")
-		sys.exit("Could not find conference")
 
 def add_loss(team):
 	#Function which adds a loss to a team
@@ -101,7 +84,6 @@ def add_loss(team):
 		West_div.loc[West_div['Team_Name']==team, "Games Left"]-=1
 	else:
 		print("Uh Oh...")
-		sys.exit("Could not find conference")
 
 def check_elim(division, date):
 	#Function to check if any teams have been eliminated because of games
@@ -137,7 +119,6 @@ def head_to_head(team, other_team, division, date):
 					other_wins+=1
 				else:
 					print("Uh Oh...")
-					sys.exit("Could not find home/away status")
 			elif row["Home Team"]==other_team and row["Away Team"]==team:
 				if row["Winner"]=="Home":
 					other_wins+=1
@@ -145,7 +126,6 @@ def head_to_head(team, other_team, division, date):
 					team_wins+=1
 				else: 
 					print("Uh Oh...")
-					sys.exit("Could not find home/away status")
 			else:
 				pass
 		else:
@@ -181,19 +161,19 @@ def divisionlead(team, other_team, team_div_name, other_div_name, division, date
 		team_lead=False
 	elif division.loc[division["Team_Name"]==team, "Wins"].values[0] + division.loc[division["Team_Name"]==team, "Games Left"].values[0] == team_div_max_wins:
 		div_leader=team_div.loc[0, "Team_Name"].values[0]
-		if (is_div == 0):
+		if (is_div ==0):
 			if not (tiebreaker(team,division,wins,date, 1)):
 				print ("divtie")
 				team_lead=False
 		#if head_to_head(team, div_leader, division, date)==0:###should actually recurse
 		#	team_lead=False
-	if division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0] < other_div_max_wins:
+	if division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0]<other_div_max_wins:
 		other_lead=False
 	elif division.loc[division["Team_Name"]==other_team, "Wins"].values[0] + division.loc[division["Team_Name"]==other_team, "Games Left"].values[0] == other_div_max_wins:
 		other_leader=other_div.iloc[0]["Team_Name"]
 		#if head_to_head(team, other_leader, division, date)==0:###should actually recurse but only one layer deep and not if other_leader = other team
 		#	other_lead=False
-		if (is_div == 0):
+		if (is_div ==0):
 			if not (tiebreaker(other_team,division,wins,date, 1)):
 				print ("divtie")
 				other_lead=False
@@ -203,14 +183,14 @@ def divisionlead(team, other_team, team_div_name, other_div_name, division, date
 		return 0
 
 
-def win_loss(teams, date):
+def win_loss(team, other_team, teams, date):
 	#Generates win loss record just within the inputted teams
 	team_names=teams.Team_Name.unique().tolist()
 	teams.loc[:,"Wins"]=0
 	teams.loc[:,"Losses"]=0
 	teams.loc[:, "Games Left"]=0
 
-	for index, rows in games.iterrows():
+	for index, row in games.iterrows():
 		if row["Date"]<date:
 			if row["Home Team"] in team_names and row["Away Team"] in team_names:
 				if row["Winner"]=="Home":
@@ -221,15 +201,24 @@ def win_loss(teams, date):
 					teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1
 		else:
 			if row["Home Team"] in team_names and row["Away Team"] in team_names:
-				teams.loc[teams["Team_Name"]==row["Home Team"], "Games Left"]+=1
-				teams.loc[teams["Team_Name"]==row["Away Team"], "Games Left"]+=1
-
-	teams.sort_values(by="Wins", ascending=False)
-	return teams
+				if row["Home Team"] == team or row["Away Team"] == other_team:
+					teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
+					teams.loc[teams["Team_Name"]==row["Away Team"], "Losses"]+=1
+				elif row["Away Team"] == team or row["Home Team"] == other_team:
+					teams.loc[teams["Team_Name"]==row["Home Team"], "Losses"]+=1
+					teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1	
+				else:	 
+					teams.loc[teams["Team_Name"]==row["Home Team"], "Games Left"]+=1
+					teams.loc[teams["Team_Name"]==row["Away Team"], "Games Left"]+=1
+	if teams.loc[teams["Team_Name"]==team, "Wins"] < teams.loc[teams["Team_Name"]==other_team, "Wins"]:
+		return 0
+	if teams.loc[teams["Team_Name"]==team, "Wins"] > teams.loc[teams["Team_Name"]==other_team, "Wins"]:
+		return 1
+	return 2
     
 def tiebreaker(team, division, wins, date, is_div):
 	#Function to determine the outcome of tiebreakers
-	#Returns False if a team is eliminated (does not assert anything about making playoffs)
+	#Returns False if a team is eliminiated (does not assert anything about making playoffs)
 
 	#Find the number of teams in the tiebreak
 	num_ties, dummy=division.loc[division["Wins"]==wins, :].shape
@@ -264,14 +253,13 @@ def tiebreaker(team, division, wins, date, is_div):
 		#If teams are in same division, go by divison record
 		#needs code
 		if team_div_name==other_div_name:          
-			for index, row in division.iterrows():
-				if (row["Division_id"]==team_div_name):  
-					print (row["Team_Name"])                    
-
 			teams=division.loc[division["Division_id"]==team_div_name, :]
 			teams.append(division.loc[division["Team_Name"]==other_team, :])
-			record=win_loss(teams, date)
-			print (record)           
+			div_rec = win_loss(team, other_team, teams, date)
+			if (div_rec ==0):
+				return False
+			if (div_rec == 1):
+				return True                     
             
 
 		print ("still tied: " + team + " and " + other_team)
@@ -304,7 +292,6 @@ for index, row in games.iterrows():
 		#add_points(w, row["Away Score"])
 	else:
 		print("Uh Oh...")
-		sys.exit("Could not find home/away status")
 
 	East_div=East_div.sort_values(by="Wins", ascending=False)
 	West_div=West_div.sort_values(by="Wins", ascending=False)
