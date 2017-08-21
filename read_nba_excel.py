@@ -227,7 +227,7 @@ def conf_record(team, other_team, date):
 		print (our_conf_record if (verbose) else "")
 		return 0
 	if _conf_record.loc[_conf_record["Team_Name"]==team, "Wins"].values[0] > _conf_record.loc[_conf_record["Team_Name"]==other_team, "Wins"].values[0]:
-		print ("still possible" )
+		print ("still possible" if (verbose) else "")
 		return 1
 	return 2
 def tiebreaker(team, division, wins, date, is_div):
@@ -286,6 +286,9 @@ def tiebreaker(team, division, wins, date, is_div):
 	#Multi-team Tiebreaker
 	#needs code
 	else:
+		temp_div=division.loc[division["Team_Name"]!= team, :]
+		other_team=temp_div.loc[temp_div["Wins"]==wins, "Team_Name"].Team_Name.unique().tolist()
+		print (team + str(other_team) + " " +  str(date) )
 		return True ### really should just rewrite head2head to be multiteam (and division leader)
 		
         
