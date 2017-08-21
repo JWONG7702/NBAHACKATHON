@@ -287,8 +287,10 @@ def tiebreaker(team, division, wins, date, is_div):
 	#needs code
 	else:
 		temp_div=division.loc[division["Team_Name"]!= team, :]
-		other_team=temp_div.loc[temp_div["Wins"]==wins, "Team_Name"].Team_Name.unique().tolist()
-		print (team + str(other_team) + " " +  str(date) )
+		other_team=temp_div.loc[temp_div["Wins"]==wins, "Team_Name"]
+		print (team)
+		print (other_team)
+		print ("::")
 		return True ### really should just rewrite head2head to be multiteam (and division leader)
 		
         
