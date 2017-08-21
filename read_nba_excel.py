@@ -1,4 +1,5 @@
 
+verbose=False
 import numpy as np 
 import pandas as pd 
 #Program for determining the playoff and elimination dates for teams
@@ -11,7 +12,7 @@ games=pd.read_excel(filename, sheetname=1, header=0)
 
 East_div= divisions_table.loc[divisions_table.Conference_id=="East", :]
 West_div= divisions_table.loc[divisions_table.Conference_id=="West", :] 
-
+Conf_dict={"East":East_div,"West":West_div}
 #Generates new columns
 East_div.loc[:,"Wins"]=0 
 East_div.loc[:,"Losses"]=0
@@ -134,7 +135,7 @@ def head_to_head(team, other_team, division, date):
 
 	if team_wins+games_left_between<other_wins:
 		return 0
-	elif other_wins+games_left_between<team_wins:
+	elif team_wins+games_left_between>other_wins:
 		return 1
 	else:
 		return 2
@@ -184,38 +185,51 @@ def divisionlead(team, other_team, team_div_name, other_div_name, division, date
 
 
 def win_loss(team, other_team, teams, date):
-	#Generates win loss record just within the inputted teams
+	#Generates win loss record just within the inputted teams  
 	team_names=teams.Team_Name.unique().tolist()
 	teams.loc[:,"Wins"]=0
 	teams.loc[:,"Losses"]=0
 	teams.loc[:, "Games Left"]=0
 
 	for index, row in games.iterrows():
-		if row["Date"]<date:
-			if row["Home Team"] in team_names and row["Away Team"] in team_names:
-				if row["Winner"]=="Home":
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Losses"]+=1
-				elif row["Winner"]=="Away":
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Losses"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1
-		else:
-			if row["Home Team"] in team_names and row["Away Team"] in team_names:
-				if row["Home Team"] == team or row["Away Team"] == other_team:
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Losses"]+=1
-				elif row["Away Team"] == team or row["Home Team"] == other_team:
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Losses"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1	
-				else:	 
-					teams.loc[teams["Team_Name"]==row["Home Team"], "Games Left"]+=1
-					teams.loc[teams["Team_Name"]==row["Away Team"], "Games Left"]+=1
-	if teams.loc[teams["Team_Name"]==team, "Wins"] < teams.loc[teams["Team_Name"]==other_team, "Wins"]:
+		if row["Home Team"] == team or row["Away Team"] == other_team or row["Home Team"] == other_team or row["Away Team"] == team:
+			if row["Date"]<	date:
+				if row["Home Team"] in team_names and row["Away Team"] in team_names:
+					if row["Winner"] =="Home":
+						teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
+					elif row["Winner"]=="Away":
+						teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1
+			else:
+				if row["Home Team"] in team_names and row["Away Team"] in team_names:
+					if row["Home Team"] == team or row["Away Team"] == other_team:
+						teams.loc[teams["Team_Name"]==row["Home Team"], "Wins"]+=1
+					elif row["Away Team"] == team or row["Home Team"] == other_team:
+						teams.loc[teams["Team_Name"]==row["Away Team"], "Wins"]+=1	
+	print(teams if (verbose) else "")
+	return teams
+	
+def div_record(team, other_team, teams, date):
+	record = win_loss(team, other_team, teams, date)
+	if record.loc[record["Team_Name"]==team, "Wins"].values[0] < record.loc[record["Team_Name"]==other_team, "Wins"].values[0]:
+		print ("eliminated" + str(date) + team if (verbose) else "")
 		return 0
-	if teams.loc[teams["Team_Name"]==team, "Wins"] > teams.loc[teams["Team_Name"]==other_team, "Wins"]:
+	if record.loc[record["Team_Name"]==team, "Wins"].values[0] > record.loc[record["Team_Name"]==other_team, "Wins"].values[0]:
+		print ("still possible" if (verbose) else "")
 		return 1
 	return 2
-    
+def conf_record(team, other_team, date):
+	conf_name=divisions_table.loc[divisions_table["Team_Name"]==team, "Conference_id"].item()
+	_conf_record = win_loss(team, other_team, Conf_dict[conf_name],date)
+
+	if _conf_record.loc[_conf_record["Team_Name"]==team, "Wins"].values[0] < _conf_record.loc[_conf_record["Team_Name"]==other_team, "Wins"].values[0]:
+		print ("eliminated" + str(date) + team if (verbose) else "")
+		print (team + " vs " + other_team if (verbose) else "")
+		print (our_conf_record if (verbose) else "")
+		return 0
+	if _conf_record.loc[_conf_record["Team_Name"]==team, "Wins"].values[0] > _conf_record.loc[_conf_record["Team_Name"]==other_team, "Wins"].values[0]:
+		print ("still possible" )
+		return 1
+	return 2
 def tiebreaker(team, division, wins, date, is_div):
 	#Function to determine the outcome of tiebreakers
 	#Returns False if a team is eliminiated (does not assert anything about making playoffs)
@@ -255,18 +269,19 @@ def tiebreaker(team, division, wins, date, is_div):
 		if team_div_name==other_div_name:          
 			teams=division.loc[division["Division_id"]==team_div_name, :]
 			teams.append(division.loc[division["Team_Name"]==other_team, :])
-			div_rec = win_loss(team, other_team, teams, date)
-			if (div_rec ==0):
+			div_rec = div_record(team, other_team, teams, date)
+			if (div_rec == 0):
 				return False
 			if (div_rec == 1):
 				return True                     
-            
-
-		print ("still tied: " + team + " and " + other_team)
+		conf_rec = conf_record(team, other_team, date)
+		if conf_rec == 0: 
+			return False
+		if conf_rec == 1:
+			return True  
+		print ("still tied: " + team + " with " + other_team + " " + str(date) )
 		return True
 
-
-				
 
 	#Multi-team Tiebreaker
 	#needs code
