@@ -318,9 +318,16 @@ for index, row in games.iterrows():
 
 	East_div=check_elim(East_div, date)
 	West_div=check_elim(West_div, date)
-
+for index, row in East_div.iterrows():
+	if row["Eliminated"]=="":
+		row["Date"]="Playoffs"
+	East_div.loc[index, :]=row
+for index, row in West_div.iterrows():
+	if row["Eliminated"]=="":
+		row["Date"]="Playoffs"
+	West_div.loc[index, :]=row
 #Writes the results to an excel file
 writer=pd.ExcelWriter("Playoff_Results_tie.xlsx", engine="xlsxwriter", date_format="mm/dd/yyyy", datetime_format="mm/dd/yyyy")
-East_div.to_excel(writer, sheet_name="East")
-West_div.to_excel(writer, sheet_name="West")
+East_div.to_excel(writer, columns=["Team_Name", "Date"])
+West_div.to_excel(writer, columns=["Team_Name", "Date"])
 writer.save()
