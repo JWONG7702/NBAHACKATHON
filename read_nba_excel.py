@@ -288,9 +288,6 @@ def tiebreaker(team, division, wins, date, is_div):
 	else:
 		temp_div=division.loc[division["Team_Name"]!= team, :]
 		other_team=temp_div.loc[temp_div["Wins"]==wins, "Team_Name"]
-		print (team)
-		print (other_team)
-		print ("::")
 		return True ### really should just rewrite head2head to be multiteam (and division leader)
 		
         
@@ -318,16 +315,17 @@ for index, row in games.iterrows():
 
 	East_div=check_elim(East_div, date)
 	West_div=check_elim(West_div, date)
-for index, row in East_div.iterrows():
-	if row["Eliminated"]=="":
-		row["Date"]="Playoffs"
-	East_div.loc[index, :]=row
-for index, row in West_div.iterrows():
-	if row["Eliminated"]=="":
-		row["Date"]="Playoffs"
-	West_div.loc[index, :]=row
+
+total=East_div.append(West_div, ignore_index=True)
+total['Date']=pd.to_datetime(total['Date']).apply(lambda x: x.date())
+
+total=total.rename(columns={"Team_Name":"Team", "Date": "Date Eliminated"})
+
+
+for index, row in total.iterrows():
+	if row["Date Eliminated"]=="":
+		total.loc[index, "Date Eliminated"]="Playoffs"
+
+
 #Writes the results to an excel file
-writer=pd.ExcelWriter("Playoff_Results_tie.xlsx", engine="xlsxwriter", date_format="mm/dd/yyyy", datetime_format="mm/dd/yyyy")
-East_div.to_excel(writer, columns=["Team_Name", "Date"])
-West_div.to_excel(writer, columns=["Team_Name", "Date"])
-writer.save()
+total.to_csv("Playoff_Results_ties.csv", columns=["Team", "Date Eliminated"], index=False, date_format ='%m/%d/%Y')
