@@ -317,15 +317,23 @@ for index, row in games.iterrows():
 	West_div=check_elim(West_div, date)
 
 total=East_div.append(West_div, ignore_index=True)
-total['Date']=pd.to_datetime(total['Date']).apply(lambda x: x.date())
+
+#total['Date']=pd.to_datetime(total['Date']).apply(lambda x: x.date())
+total["Date"]=pd.to_datetime(total["Date"], errors="ignore", format="%m/%d/%Y")
+
+total["Date"]=total["Date"].astype("str")
+
+
+for index, row in total.iterrows():
+	if row["Date"]=="":
+		total.loc[index, "Date"]="Playoffs"
+	else:
+		replace=row["Date"].split(" ")[0]
+		replace=replace.replace("-", "/")
+		total.loc[index, "Date"]=replace
 
 total=total.rename(columns={"Team_Name":"Team", "Date": "Date Eliminated"})
 
 
-for index, row in total.iterrows():
-	if row["Date Eliminated"]=="":
-		total.loc[index, "Date Eliminated"]="Playoffs"
-
-
 #Writes the results to an excel file
-total.to_csv("Playoff_Results_ties.csv", columns=["Team", "Date Eliminated"], index=False, date_format ='%m/%d/%Y')
+total.to_csv("Playoff_Results_ties.csv", columns=["Team", "Date Eliminated"], index=False)
