@@ -13,6 +13,7 @@ games=pd.read_excel(filename, sheetname=1, header=0)
 East_div= divisions_table.loc[divisions_table.Conference_id=="East", :]
 West_div= divisions_table.loc[divisions_table.Conference_id=="West", :] 
 Conf_dict={"East":East_div,"West":West_div}
+
 #Generates new columns
 East_div.loc[:,"Wins"]=0 
 East_div.loc[:,"Losses"]=0
@@ -20,7 +21,7 @@ East_div.loc[:,"Games Left"]=82
 East_div.loc[:, "Eliminated"]=0
 East_div.loc[:, "Playoffs"]=0
 East_div.loc[:, "Date"]=""
-#East_div.loc[:, "Total Points"]=0
+East_div.loc[:, "Point Differential"]=0
 
 West_div.loc[:,"Wins"]=0 
 West_div.loc[:,"Losses"]=0
@@ -28,7 +29,7 @@ West_div.loc[:,"Games Left"]=82
 West_div.loc[:,"Eliminated"]=0
 West_div.loc[:, "Playoffs"]=0
 West_div.loc[:, "Date"]=""
-#West_div.loc[:, "Total Points"]=0
+West_div.loc[:, "Point Differential"]=0
 
 
 """
@@ -47,17 +48,18 @@ def check_play(division, date):
 			row["Date"]=date
 			division.loc[index]=row
 	return division
+"""
 def add_points(team, points):
-	#Adds points to get total points in a season
+	#Adds point differential to get total point differential in a season
 	conf=divisions_table[divisions_table.Team_Name==team]
 	conf=conf.iloc[0]["Conference_id"]
 	if conf=="East":
-		East_div.loc[East_div['Team_Name']==team, "Total Points"]+=points
+		East_div.loc[East_div['Team_Name']==team, "Point Differential"]+=points
 	elif conf=="West":
-		West_div.loc[West_div['Team_Name']==team, "Total Points"]+=points
+		West_div.loc[West_div['Team_Name']==team, "Point Differential"]+=points
 	else:
 		print("Uh Oh...")
-"""
+
 
 
 def add_win(team):
@@ -139,8 +141,6 @@ def head_to_head(team, other_team, division, date):
 		return 1
 	else:
 		return 2
-
-
 
 def divisionlead(team, other_team, team_div_name, other_div_name, division, date, is_div):
 	#Function which returns 0 if team cannot win division tie breaker against other_team
@@ -298,15 +298,15 @@ for index, row in games.iterrows():
 		l=row["Away Team"]
 		add_win(w)
 		add_loss(l)
-		#add_points(w, row["Home Score"])
-		#add_points(l, row["Away Score"])
+		add_points(w, row["Home Score"]-row["Away Score"])
+		add_points(l, row["Away Score"]-row["Home Score"])
 	elif row["Winner"]=="Away":
 		w=row["Away Team"]
 		l=row["Home Team"]
 		add_win(w)
 		add_loss(l)
-		#add_points(l, row["Home Score"])
-		#add_points(w, row["Away Score"])
+		add_points(l, row["Home Score"]-row["Away Score"])
+		add_points(w, row["Away Score"]-row["Home Score"])
 	else:
 		print("Uh Oh...")
 
@@ -333,7 +333,6 @@ for index, row in total.iterrows():
 		total.loc[index, "Date"]=replace
 
 total=total.rename(columns={"Team_Name":"Team", "Date": "Date Eliminated"})
-
 
 #Writes the results to an excel file
 total.to_csv("Playoff_Results_ties.csv", columns=["Team", "Date Eliminated"], index=False)
