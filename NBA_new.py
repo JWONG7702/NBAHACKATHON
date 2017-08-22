@@ -220,6 +220,7 @@ def try_elim(team, conference, date):
 
 def random_assign(games_after):
 	#randomly assigns victories to the remaining teams
+	return True
 def h2h(team, other_team, date):
 	#Head to Head record for two teams
 	#Returns 0 if unsolved, 1 if team loses and 2 if team wins
@@ -292,7 +293,7 @@ def is_div_leader(team, conference, date):
 		if h2h_result==1:
 			return False
 		elif h2h_result==2:
-			return True:
+			return True
 		else: 
 			#division win loss
 			division_in=win_loss(division, date)
@@ -345,7 +346,7 @@ def rank(conference, date):
 		ties, dummy=conference.loc[conference["Wins"]==wins, :].shape
 		if ties==1:
 			pass
-		elif ties==2 and row["Tiebreak"]=0:
+		elif ties==2 and row["Tiebreak"]==0:
 			#two way tiebreaker
 			#returns 1 if the team loses the tiebreak and 2 if the team wins
 			two_way(team, wins, row, conference, date)
